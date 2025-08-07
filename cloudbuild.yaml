@@ -1,0 +1,49 @@
+steps:
+  # Step 1: Clone GitHub repo
+  - name: 'gcr.io/cloud-builders/git'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "🔁 Cloning source from GitHub..."
+        git clone https://github.com/<your-username>/<your-repo>.git source
+        cd source
+
+  # Step 2: Build Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    dir: 'source'
+    args:
+      [
+        'build',
+        '-t',
+        '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO_NAME}/${_SERVICE_NAME}:latest',
+        '.'
+      ]
+
+  # Step 3: Push Docker image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      [
+        'push',
+        '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO_NAME}/${_SERVICE_NAME}:latest'
+      ]
+
+  # Step 4: Deploy to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'gcloud'
+    args:
+      [
+        'run', 'deploy', '${_SERVICE_NAME}',
+        '--image', '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO_NAME}/${_SERVICE_NAME}:latest',
+        '--platform', 'managed',
+        '--region', '${_REGION}',
+        '--allow-unauthenticated'
+      ]
+
+substitutions:
+  _SERVICE_NAME: my-cloudrun-service
+  _REGION: us-central1
+  _REPO_NAME: my-artifact-repo
+
+images:
+  - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO_NAME}/${_SERVICE_NAME}:latest'
