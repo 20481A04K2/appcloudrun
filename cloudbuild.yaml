@@ -6,7 +6,7 @@ steps:
       - '-c'
       - |
         echo "🔁 Cloning source from GitHub..."
-        git clone https://github.com/<your-username>/<your-repo>.git source
+        git clone https://github.com/20481A04K2/appcloudrun.git
         cd source
 
   # Step 2: Build Docker image
